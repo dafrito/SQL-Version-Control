@@ -1,0 +1,144 @@
+#!/bin/sh
+# Updates a database by running patches
+PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
+
+. db-load-settings.sh
+. db-get-password.sh
+if [ "$?" != 0 ]; then
+    exit "$?"
+fi
+
+installed=/tmp/update-installed.$$
+staged=/tmp/update-staged.$$
+tables_before=/tmp/update-tables-before.$$
+tables_after=/tmp/update-tables-after.$$
+last_error=/tmp/update-error-tmp.$$
+function cleanup {
+    rm -f $installed $staged $tables_before $tables_after $last_error
+}
+trap cleanup EXIT
+trap 'echo; cleanup; exit 1' INT TERM
+touch $installed
+touch $staged
+
+if mysql $db -p"$PASSWORD" -e'show tables' | egrep "^patches\$" >/dev/null; then
+    if ! mysql $db -p"$PASSWORD" -e"select patch from patches order by order_applied" | tail -n +2  >$installed; then
+        exit 2
+    fi;
+fi
+
+IFS='
+'
+for patch in `cat $patchlist`
+do
+    patch=${patch%%#*}
+    if [ -z "$patch" ]; then
+        continue
+    fi
+    IFS='   '
+    set $patch >/dev/null
+    if [ ! -e $root/$1 ]; then
+        echo "Patch does not exist in $root: $1" 1>&2
+        exit 3
+    fi 
+    if ! egrep $1 <$installed >/dev/null; then
+        echo $patch
+    fi
+done >$staged
+
+if [ ! -s "$staged" ]; then
+    exit 0;
+fi
+
+echo "Available updates:"
+cat -n $staged | awk '{ print $1 ". " $2 }'
+read -p"Install updates? (y/n): " r
+case $r in
+    y*) ;;
+    *) exit 1
+esac
+
+function log_table {
+    mysql $db -p"$PASSWORD" -e"insert into patch_changelog (patch, table_name, type) values ('$2', '$3', '$1')" 2>$last_error
+    if [ -s $last_error ]; then
+        error=`cat $last_error`
+        echo $error | egrep "^ERROR 1062 " >/dev/null && echo $error | egrep "$2"-"$3"-"$1" >/dev/null && return
+        echo $error 1>&2
+        exit 2
+    fi
+}
+
+IFS='
+'
+for patch in `cat $staged`
+do
+    IFS='   '
+    set $patch
+    patch_name=$1
+    echo $patch_name
+    shift
+    if ! mysql $db -p"$PASSWORD" -e"show tables" | sort >$tables_before; then
+        exit 2
+    fi;
+    if ! mysql $db -p"$PASSWORD" <$root/$patch_name; then
+        exit 2
+    fi
+    if ! mysql $db -p"$PASSWORD" -e"show tables" | sort >$tables_after; then
+        exit 2
+    fi;
+    IFS='
+'
+    for line in `diff -U 0 $tables_before $tables_after`; do
+        case $line in
+            ---*|+++*|@@*) continue ;;
+            +*) log_table 'create' $patch_name ${line:1} ;;
+            -*) log_table 'drop' $patch_name ${line:1} ;;
+        esac
+    done;
+    IFS='   '
+    for table; do
+        if [ $table = "Tables_in_$db" ]; then
+            continue;
+        fi
+        case $table in
+            +*) 
+                if egrep "$table" <$tables_before >/dev/null; then
+                    echo "$0: patchlist: '$table' existed before '$patch_name' was executed" 1>&2
+                    exit 1
+                fi
+                if ! egrep "$table" <$tables_after >/dev/null; then
+                    echo "$0: patchlist: '$table' does not exist, even though '$patch_name' claimed to have created it" 1>&2
+                    exit 1
+                fi
+                log_table 'create' $patch_name ${line:1} ;log_table 'create' $patch_name ${line:1}
+                ;;
+            -*) 
+                if ! egrep "$table" <$tables_before >/dev/null; then
+                    echo "$0: patchlist: '$table' does not exist, and could not have been removed by '$patch_name'" 1>&2
+                    exit 1
+                fi
+                if egrep "$table" <$tables_after >/dev/null; then
+                    echo "$0: patchlist: '$table' still exists, even though '$patch_name' claimed to have removed it" 1>&2
+                    exit 1
+                fi
+                log_table 'drop' $patch_name ${line:1} 
+                ;;
+            *) 
+                if egrep "$table" <$tables_before >/dev/null; then
+                    if egrep "$table" <$tables_after >/dev/null; then
+                        log_table 'alter' $patch_name $table
+                    else
+                        log_table 'drop' $patch_name $table
+                    fi
+                elif egrep "$table" <$tables_after >/dev/null; then
+                    log_table 'create' $patch_name $table
+                else
+                    echo "$0: '$table' was not created or removed, but was listed for '$patch_name'" 1>&2
+                    exit 1
+                fi
+        esac
+    done
+    if ! mysql $db -p"$PASSWORD" -e"insert into patches (patch, who_applied) values ('$patch_name', '$(whoami)');"; then
+        exit 2
+    fi;
+done;

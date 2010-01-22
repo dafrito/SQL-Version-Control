@@ -1,0 +1,78 @@
+#!/bin/sh
+# Deletes all tables from the specified database.
+PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
+
+. db-load-settings.sh
+. db-get-password.sh
+if [ "$?" != 0 ]; then
+    exit "$?"
+fi
+
+existing_tables=`mysql $db -p"$PASSWORD" -e"show tables"`
+if [ ! "$?" = 0 ]; then
+    exit 2
+fi;
+if ! echo $existing_tables | egrep 'patch_history' >/dev/null; then
+    exit 0;
+fi
+
+history=/tmp/wipe-history.$$
+staged=/tmp/wipe-staged.$$
+last_error=/tmp/wipe-last-error.$$
+log=./db-$db.log
+function cleanup {
+    rm -f $staged $tables $last_error $history
+}
+trap cleanup EXIT
+trap 'echo; cleanup; exit 1' INT TERM
+
+if ! mysql $db -p"$PASSWORD" -e"select table_name,type,order_applied from patch_history" | grep -v "Tables_in_$db" >$history; then
+    exit 2
+fi;
+cat $history | db-get-installed-tables.awk >$staged
+if [ ! -s $staged ]; then
+    exit 0;
+fi;
+
+echo "Installed tables in $db:"
+cat $staged
+read -p"Destroy listed tables in $db? (y/n): " r
+case $r in
+    y*) ;;
+    *) exit 1
+esac
+
+tries=0
+errors=0
+while [ $tries -lt 20 ]; do
+    for table in `cat $staged`; do
+        echo "removing '$table'" >>$log
+        mysql $db -p"$PASSWORD" -e"drop view if exists $table; drop table if exists $table;" 2>$last_error
+        if [ -s $last_error ]; then
+            let errors++;
+            cat $last_error >>$log
+        fi
+    done
+    if [ $errors = 0 ]; then
+        break
+    else
+        echo "removal failed, looping" >>$log
+        errors=0
+    fi
+    let tries++
+done
+if [ $errors -gt 0 ]; then
+    echo "removed failed after 20 tries" >>$log
+    echo "$0: could not remove all tables. see $log for details" 1>&2
+    exit 2
+fi
+
+remaining=`mysql $db -p"$PASSWORD" -e 'show tables'`
+if [ "$?" != 0 ]; then
+    exit 2
+fi
+if echo $remaining | egrep '[^[:space:]]' >/dev/null; then
+    echo 'The following untracked tables were ignored:'
+    set $remaining;shift
+    echo $* | sed 's/ /\n/g'
+fi;

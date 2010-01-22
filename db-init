@@ -1,0 +1,49 @@
+#!/bin/sh
+# Initializes a directory to be used as a db-utils repository
+PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
+
+db_utils_DONT_VERIFY=0 . db-load-settings.sh
+
+if [ -e "$SETTINGS" ]; then
+    echo "$0: Repo already initialized here at $SETTINGS" 1>&2
+    exit 1
+fi
+
+if [ -z "$DATABASE" ]; then
+    echo "$0: Usage db init [options] <database-name>" 1>&2
+    exit 1
+fi
+
+SETTINGS=${SETTINGS-"./db-settings"}
+
+if ! touch $SETTINGS; then
+    exit 1;
+fi
+
+if [ -n "$DATABASE" ]; then
+    echo "DATABASE=$DATABASE" >>$SETTINGS
+fi
+
+if [ -n "$LOG" ]; then
+    echo "LOG=$LOG" >>$SETTINGS
+fi
+
+if [ -n "$PASSWORD" ]; then
+    echo "PASSWORD=$PASSWORD" >>$SETTINGS
+fi
+
+if [ ! -e "$PATCH_ROOT" ]; then
+    if ! mkdir $PATCH_ROOT; then
+        exit 1;
+    fi
+fi
+
+if ! touch $patchlist; then
+    exit 1;
+fi 
+
+if [ ! -e $root/init.sql ]; then
+    cp ${0%/*}/db-init.sql $root/db-init.sql
+fi
+
+echo "$root/db-init.sql" >>$patchlist
