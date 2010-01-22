@@ -38,12 +38,16 @@ if [ ! -e "$PATCH_ROOT" ]; then
     fi
 fi
 
+if [ -e $patchlist ]; then
+    exit 0;
+fi 
+
 if ! touch $patchlist; then
     exit 1;
-fi 
+fi
 
 if [ ! -e $root/init.sql ]; then
     cp ${0%/*}/db-init.sql $root/db-init.sql
 fi
 
-echo "$root/db-init.sql" >>$patchlist
+echo "db-init.sql" >>$patchlist

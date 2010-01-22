@@ -26,7 +26,6 @@ if mysql $db -p"$PASSWORD" -e'show tables' | egrep "^patches\$" >/dev/null; then
         exit 2
     fi;
 fi
-
 IFS='
 '
 for patch in `cat $patchlist`
