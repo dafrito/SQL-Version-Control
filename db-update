@@ -79,9 +79,11 @@ do
     if ! mysql $db -p"$PASSWORD" -e"show tables" | sort >$tables_before; then
         exit 2
     fi;
-    if ! mysql $db -p"$PASSWORD" <$root/$patch_name; then
+    pushd $root >/dev/null
+    if ! mysql $db -p"$PASSWORD" <$patch_name; then
         exit 2
     fi
+    popd >/dev/null
     if ! mysql $db -p"$PASSWORD" -e"show tables" | sort >$tables_after; then
         exit 2
     fi;
