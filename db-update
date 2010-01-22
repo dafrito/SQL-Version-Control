@@ -49,9 +49,9 @@ if [ ! -s "$staged" ]; then
     exit 0;
 fi
 
-echo "Available updates:"
+echo "Available updates for $db:"
 cat -n $staged | awk '{ print $1 ". " $2 }'
-read -p"Install updates? (y/n): " r
+read -p"Install updates to $db? (y/n): " r
 case $r in
     y*) ;;
     *) exit 1
