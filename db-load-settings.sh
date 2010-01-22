@@ -34,7 +34,7 @@ fi;
 if [ -n "$DATABASE" ] && [ -e $DATABASE.db-settings ]; then
     load_settings ./$DATABASE.db-settings
 fi
-set $args
+set $args >/dev/null
 while [ -n "$1" ]; do
     case "$1" in
         -d|-db|--database) DATABASE=$2; shift ;;
@@ -55,6 +55,7 @@ while [ -n "$1" ]; do
     esac
     shift
 done
+set $args >/dev/null
 PATCH_ROOT=./patches
 
 db=$DATABASE
