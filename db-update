@@ -61,7 +61,7 @@ function log_table {
     mysql $db -p"$PASSWORD" -e"insert into patch_changelog (patch, table_name, type) values ('$2', '$3', '$1')" 2>$last_error
     if [ -s $last_error ]; then
         error=`cat $last_error`
-        echo $error | egrep "^ERROR 1062 " >/dev/null && echo $error | egrep "$2"-"$3"-"$1" >/dev/null && return
+        echo $error | egrep "^ERROR 1062 " >/dev/null && echo $error | egrep "$2"-"$3" >/dev/null && return
         echo $error 1>&2
         exit 2
     fi
