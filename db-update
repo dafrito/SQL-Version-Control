@@ -80,9 +80,16 @@ do
         exit 2
     fi;
     pushd $root >/dev/null
-    if ! mysql $db -p"$PASSWORD" <$patch_name; then
-        exit 2
-    fi
+    case $patch_name in
+        *.sql)
+            if ! mysql $db -p"$PASSWORD" <$patch_name; then
+                exit 2
+            fi ;;
+        *)
+            if ! . $patch_name; then
+                exit 2
+            fi ;;
+    esac
     popd >/dev/null
     if ! mysql $db -p"$PASSWORD" -e"show tables" | sort >$tables_after; then
         exit 2
