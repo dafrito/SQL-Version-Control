@@ -21,7 +21,7 @@ trap 'echo; cleanup; exit 1' INT TERM
 touch $installed
 touch $staged
 
-if mysql $db -p"$PASSWORD" -e'show tables' | egrep "^patches\$" >/dev/null; then
+if mysql $db -p"$PASSWORD" -e'show tables' | egrep -x "patches" >/dev/null; then
     if ! mysql $db -p"$PASSWORD" -e"select patch from patches order by order_applied" | tail -n +2  >$installed; then
         exit 2
     fi;
@@ -111,11 +111,11 @@ do
         case $table in
             +*) 
                 table=${table:1};
-                if egrep "$table" <$tables_before >/dev/null; then
+                if egrep -x "$table" <$tables_before >/dev/null; then
                     echo "$0: patchlist: '$table' existed before '$patch_name' was executed" 1>&2
                     exit 1
                 fi
-                if ! egrep "$table" <$tables_after >/dev/null; then
+                if ! egrep -x "$table" <$tables_after >/dev/null; then
                     echo "$0: patchlist: '$table' does not exist, even though '$patch_name' claimed to have created it" 1>&2
                     exit 1
                 fi
@@ -123,24 +123,24 @@ do
                 ;;
             -*) 
                 table=${table:1};
-                if ! egrep "$table" <$tables_before >/dev/null; then
+                if ! egrep -x "$table" <$tables_before >/dev/null; then
                     echo "$0: patchlist: '$table' does not exist, and could not have been removed by '$patch_name'" 1>&2
                     exit 1
                 fi
-                if egrep "$table" <$tables_after >/dev/null; then
+                if egrep -x "$table" <$tables_after >/dev/null; then
                     echo "$0: patchlist: '$table' still exists, even though '$patch_name' claimed to have removed it" 1>&2
                     exit 1
                 fi
                 log_table 'drop' $patch_name ${line:1} 
                 ;;
             *) 
-                if egrep "$table" <$tables_before >/dev/null; then
-                    if egrep "$table" <$tables_after >/dev/null; then
+                if egrep -x "$table" <$tables_before >/dev/null; then
+                    if egrep -x "$table" <$tables_after >/dev/null; then
                         log_table 'alter' $patch_name $table
                     else
                         log_table 'drop' $patch_name $table
                     fi
-                elif egrep "$table" <$tables_after >/dev/null; then
+                elif egrep -x "$table" <$tables_after >/dev/null; then
                     log_table 'create' $patch_name $table
                 else
                     echo "$0: '$table' was not created or removed, but was listed for '$patch_name'" 1>&2
