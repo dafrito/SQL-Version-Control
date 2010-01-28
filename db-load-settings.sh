@@ -2,7 +2,7 @@
 # Updates a database by running patches
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
-FORCE=1
+DUMP_TABLES=0
 
 function load_settings {
     if [ ! -e $1 ]; then
@@ -34,7 +34,7 @@ fi;
 if [ -n "$DATABASE" ] && [ -e $DATABASE.db-settings ]; then
     load_settings ./$DATABASE.db-settings
 fi
-set $args >/dev/null
+set -- $args >/dev/null
 while [ -n "$1" ]; do
     case "$1" in
         -d|-db|--database) DATABASE=$2; shift ;;
@@ -45,6 +45,8 @@ while [ -n "$1" ]; do
         -f|--force) FORCE=0 ;;
         -i|--interactive) FORCE=1 ;;
         -l|--log) LOG=$2; shift ;;
+        --no-dump) unset DUMP_TABLES ;;
+        --dump) DUMP_TABLES=0 ;;
         -*) echo "$0: Unknown argument $1" 1>&2; exit 1 ;;
         *) 
             if [ -e $1 ]; then
@@ -55,7 +57,7 @@ while [ -n "$1" ]; do
     esac
     shift
 done
-set $args >/dev/null
+set -- $args >/dev/null
 PATCH_ROOT=./patches
 
 db=$DATABASE

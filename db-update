@@ -152,3 +152,7 @@ do
         exit 2
     fi;
 done;
+
+if [ $DUMP_TABLES ]; then
+    mysqldump $db -p"$PASSWORD" -d >db-$db.sql
+fi
