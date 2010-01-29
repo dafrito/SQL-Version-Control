@@ -168,5 +168,5 @@ do
 done;
 
 if [ $DUMP_TABLES ]; then
-    db-dump $db.sql
+    db-dump >$db.sql
 fi
