@@ -115,6 +115,9 @@ do
                 exit 2
             fi ;;
     esac
+    if ! mysql $db -p"$PASSWORD" -e"insert into patches (patch, who_applied) values ('$patch_name', '$(whoami)');"; then
+        exit 2
+    fi;
     popd >/dev/null
     if ! mysql $db -p"$PASSWORD" -e"show tables" -N | . db-filter-tables.sh | sort >$tables_after; then
         exit 2
@@ -173,9 +176,6 @@ do
                 fi
         esac
     done
-    if ! mysql $db -p"$PASSWORD" -e"insert into patches (patch, who_applied) values ('$patch_name', '$(whoami)');"; then
-        exit 2
-    fi;
 done;
 
 if [ $dump ]; then
