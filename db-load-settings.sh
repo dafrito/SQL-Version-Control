@@ -58,9 +58,11 @@ patchlist=$db.list;
 if [ ! $DB_DONT_COMPLAIN ]; then
     if [ $ERROR ]; then
         echo "db: error while loading '$ERROR'"
+        exit 1
     fi
     if [ -z $db ]; then
         echo "db: no database specified and there is no default" 1>&2;
+        exit 1
     fi
     if [ ! -e $patchlist ]; then
         echo "db: $patchlist not found" 1>&2
