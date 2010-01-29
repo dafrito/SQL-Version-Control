@@ -20,7 +20,7 @@ while [ -n "$1" ]; do
 done
 
 if [ -z $db ]; then
-    if [ -e $CONFIG_ROOT/default ]; then
+    if [ -s $CONFIG_ROOT/default ]; then
         db=$(cat $CONFIG_ROOT/default);
     fi
 fi

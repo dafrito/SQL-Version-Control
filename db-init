@@ -20,6 +20,7 @@ fi
 if [ ! -e $CONFIG_ROOT/default ]; then
     echo $db >$CONFIG_ROOT/default
 fi
+touch $CONFIG_ROOT/default
 
 SETTINGS="$CONFIG_ROOT/$db.settings"
 if [ ! -e "$SETTINGS" ]; then
@@ -27,8 +28,8 @@ if [ ! -e "$SETTINGS" ]; then
         echo "db-init: $SETTINGS is not accessible"
         exit 1;
     fi
-    if [ -n "$LOG" ]; then
-        echo "LOG=$LOG" >>$SETTINGS
+    if [ -n "$root" ]; then
+        echo "root=$root" >>$SETTINGS
     fi
 fi;
 
