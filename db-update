@@ -58,7 +58,12 @@ if [ ! $FORCE ]; then
 fi
 
 if [ $NEW ]; then
-    mysql $db -p"$PASSWORD" <$CONFIG_ROOT/$db-init.sql
+    if [ -s $CONFIG_ROOT/init.sql ]; then
+        mysql $db -p"$PASSWORD" <$CONFIG_ROOT/init.sql
+    fi
+    if [ -s $CONFIG_ROOT/$db/init.sql ]; then
+        mysql $db -p"$PASSWORD" <$CONFIG_ROOT/$db/init.sql
+    fi
 fi
 
 function log_table {

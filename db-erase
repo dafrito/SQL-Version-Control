@@ -19,7 +19,7 @@ fi
 history=/tmp/db-erase-$db-history.$$
 staged=/tmp/db-erase-$db-staged.$$
 last_error=/tmp/db-erase-$db-error.$$
-log=$CONFIG_ROOT/$db.log
+log=$CONFIG_ROOT/$db/log
 
 function cleanup {
     rm -f $staged $tables $last_error $history

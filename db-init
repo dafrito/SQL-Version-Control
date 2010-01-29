@@ -11,18 +11,18 @@ if [ -z "$db" ]; then
     exit 1
 fi
 
-if [ ! -e $CONFIG_ROOT ]; then
-    if ! mkdir $CONFIG_ROOT; then
+if [ ! -e $CONFIG_ROOT/$db ]; then
+    if ! mkdir -p $CONFIG_ROOT/$db; then
         exit 1
     fi
 fi
 
-if [ ! -e $CONFIG_ROOT/default ]; then
+if [ ! -s $CONFIG_ROOT/default ]; then
     echo $db >$CONFIG_ROOT/default
 fi
 touch $CONFIG_ROOT/default
 
-SETTINGS="$CONFIG_ROOT/$db.settings"
+SETTINGS="$CONFIG_ROOT/$db/settings"
 if [ ! -e "$SETTINGS" ]; then
     if ! touch $SETTINGS; then
         echo "db-init: $SETTINGS is not accessible"
@@ -34,9 +34,9 @@ if [ ! -e "$SETTINGS" ]; then
 fi;
 
 if [ -n "$PASSWORD" ]; then
-    echo $PASSWORD >$CONFIG_ROOT/$db.password
+    echo $PASSWORD >$CONFIG_ROOT/$db/password
 fi
-touch $CONFIG_ROOT/$db.password
+touch $CONFIG_ROOT/$db/password
 touch $CONFIG_ROOT/password
 
 if [ ! -e "$root" ]; then
@@ -52,11 +52,16 @@ if ! touch $patchlist; then
     exit 1;
 fi
 
-if ! cp ${0%/*}/db-init.sql $CONFIG_ROOT/$db-init.sql; then
-    exit 1;
+if [ ! -s $CONFIG_ROOT/$db/init.sql ]; then
+    if ! cp ${0%/*}/db-init.sql $CONFIG_ROOT/$db/init.sql; then
+        exit 1;
+    fi;
 fi;
+touch $CONFIG_ROOT/$db/init.sql
 
-if ! cp ${0%/*}/db-ignore $CONFIG_ROOT/ignore; then
-    exit 1;
-fi;
-touch $CONFIG_ROOT/$db-ignore
+if [ ! -s $CONFIG_ROOT/ignore ]; then
+    if ! cp ${0%/*}/db-ignore $CONFIG_ROOT/ignore; then
+        exit 1;
+    fi;
+fi
+touch $CONFIG_ROOT/$db/ignore
