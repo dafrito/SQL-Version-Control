@@ -26,7 +26,7 @@ function cleanup {
 trap cleanup EXIT
 trap 'echo; cleanup; exit 1' INT TERM
 
-if ! mysql $db -p"$PASSWORD" -e"select table_name,type,order_applied from patch_history" | grep -v "Tables_in_$db" >$history; then
+if ! mysql $db -p"$PASSWORD" -e"select table_name,type,order_applied from patch_history" -N | egrep -v "Tables_in_$db" >$history; then
     exit 2
 fi;
 cat $history | db-get-installed-tables.awk >$staged
