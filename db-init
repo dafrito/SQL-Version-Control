@@ -15,12 +15,13 @@ if [ ! -e $CONFIG_ROOT/$db ]; then
     if ! mkdir -p $CONFIG_ROOT/$db; then
         exit 1
     fi
-    if [ ! -e $CONFIG_ROOT/.gitignore ]; then
-        cat >$CONFIG_ROOT/.gitignore <<X
+fi
+
+if [ ! -e $CONFIG_ROOT/.gitignore ]; then
+    cat >$CONFIG_ROOT/.gitignore <<X
 *password
-*.log
+*log
 X
-    fi
 fi
 
 if [ ! -s $CONFIG_ROOT/default ]; then
