@@ -11,6 +11,13 @@ function get_tables {
     fi
 }
 
+function log {
+    if [ -z $log ]; then
+        return
+    fi
+    echo "$db: " $* >>$log
+}
+
 if ! get_tables | egrep -x 'patches' >/dev/null; then
     echo "db: nothing to erase in $db" 1>&2
     exit 0;
@@ -19,7 +26,6 @@ fi
 history=/tmp/db-erase-$db-history.$$
 staged=/tmp/db-erase-$db-staged.$$
 last_error=/tmp/db-erase-$db-error.$$
-log=$CONFIG_ROOT/$db/log
 
 function cleanup {
     rm -f $staged $tables $last_error $history
@@ -52,26 +58,29 @@ fi
 tries=0
 errors=0
 while [ $tries -lt 20 ]; do
-    echo "[II] Starting erase, attempt $tries" >>$log
+    log "[II] Starting erase, attempt $tries"
     for table in `cat $staged`; do
-        echo "removing '$table'" >>$log
+        log "[II] Attempting to drop '$table'"
         mysql $db -p"$PASSWORD" -e"drop view if exists $table; drop table if exists $table;" 2>$last_error
         if [ -s $last_error ]; then
             let errors++;
-            echo "[WW] error during removal: $(cat $last_error)" >>$log
+            log "[WW] error during removal: $(cat $last_error)"
         fi
     done
     if [ $errors = 0 ]; then
         break
     else
-        echo "[WW] removal failed with $errors error(s)" >>$log
+        log "[WW] removal failed with $errors error(s)"
         errors=0
     fi
     let tries++
 done
 if [ $errors -gt 0 ]; then
-    echo "[EE] remove failed after 20 tries" >>$log
-    echo "db: could not remove all tables. see $log for details" 1>&2
+    log "[EE] remove failed after 20 tries"
+    echo "db: could not remove all tables" 1>&2
+    if [ -n $log ]; then
+        echo "See $log for more information" 1>&2
+    fi
     exit 2
 fi
 
