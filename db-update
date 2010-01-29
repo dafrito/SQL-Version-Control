@@ -25,24 +25,35 @@ if mysql $db -p"$PASSWORD" -e'show tables' -N | egrep -x "patches" >/dev/null; t
 else
     NEW=0
 fi
-IFS='
+function get_staged {
+    IFS='
 '
-for patch in $(cat $patchlist)
-do
-    patch=${patch%%#*}
-    if [ -z "$patch" ]; then
-        continue
-    fi
-    IFS='   '
-    set $patch >/dev/null
-    if [ ! -e $root/$1 ]; then
-        echo "db: $1 does not exist in $root" 1>&2
-        exit 1
-    fi 
-    if ! egrep $1 <$installed >/dev/null; then
-        echo $patch
-    fi
-done >$staged
+    for patch in $(cat $1)
+    do
+        patch=${patch%%#*}
+        if [ -z "$patch" ]; then
+            continue
+        fi
+        IFS='   '
+        set -- $patch >/dev/null
+        if echo $1 | grep -e'\.list$' >/dev/null; then
+            if [ -e $root/$1 ]; then
+                get_staged $root/$1
+            elif [ -e $1 ]; then
+                get_staged $1
+            else
+                echo "db: $1 does not exist in '$root' or current dir" 1>&2
+                exit 1
+            fi
+        elif [ ! -e $root/$1 ]; then
+            echo "db: $1 does not exist in $root" 1>&2
+            exit 1
+        elif ! egrep $1 <$installed >/dev/null; then
+            echo $patch
+        fi
+    done 
+}
+get_staged $patchlist >$staged
 if [ ! -s "$staged" ]; then
     echo "db: $db up-to-date" 1>&2
     exit 0;
