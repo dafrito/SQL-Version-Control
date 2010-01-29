@@ -79,7 +79,7 @@ if ! mysql $db -p"$PASSWORD" -e"truncate patches; truncate patch_changelog"; the
     exit 2
 fi
 
-if [ $(get_tables | . db-filter-tables.sh | wc -l) > 0 ]; then 
+if [ $(get_tables | . db-filter-tables.sh | wc -l) -gt 0 ]; then 
     echo 'The following untracked tables were not removed:'
     get_tables | . db-filter-tables.sh;
 fi;
