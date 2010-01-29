@@ -65,8 +65,8 @@ while [ -n "$1" ]; do
         -p|-pw|--password) PASSWORD=$2; shift ;;
         -f|--force) FORCE=0 ;;
         -i|--interactive) unset FORCE ;;
-        --dump) DUMP_TABLES=0 ;;
-        --no-dump) unset DUMP_TABLES ;;
+        --dump) dump=0 ;;
+        --no-dump) unset dump;;
         -r|--root) root=$2; shift ;;
         -l|--log) log=$2; shift ;;
     esac

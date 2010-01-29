@@ -178,6 +178,6 @@ do
     fi;
 done;
 
-if [ $DUMP_TABLES ]; then
+if [ $dump ]; then
     db-dump >$db.sql
 fi
