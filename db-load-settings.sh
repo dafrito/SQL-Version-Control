@@ -45,17 +45,14 @@ while [ -n "$1" ]; do
         -i|--interactive) unset FORCE ;;
         --dump) DUMP_TABLES=0 ;;
         --no-dump) unset DUMP_TABLES ;;
+        -r|--root) root=$2; shift ;;
     esac
     shift
 done
 set -- $args >/dev/null
 
-root=./patches
-if [ -e $db.patchlist ]; then
-    patchlist=$db.patchlist;
-else
-    patchlist=patchlist
-fi
+root=${root-'.'}
+patchlist=$db.list;
 
 if [ ! $DB_DONT_COMPLAIN ]; then
     if [ $ERROR ]; then
