@@ -5,7 +5,7 @@
 }
 END {
     for (i in tables) {
-        if(tables[i] != "delete")
+        if(tables[i] != "drop")
             print i;
     }
 }
