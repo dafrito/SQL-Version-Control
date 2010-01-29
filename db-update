@@ -2,17 +2,14 @@
 # Updates a database by running patches
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
-. db-load-settings.sh
-. db-get-password.sh
-if [ "$?" != 0 ]; then
-    exit "$?"
-fi
+. db-load-settings.sh;
+. db-get-password.sh;
 
-installed=/tmp/update-installed.$$
-staged=/tmp/update-staged.$$
-tables_before=/tmp/update-tables-before.$$
-tables_after=/tmp/update-tables-after.$$
-last_error=/tmp/update-error-tmp.$$
+installed=/tmp/db-update-$db-installed.$$
+staged=/tmp/db-update-$db-staged.$$
+tables_before=/tmp/db-update-$db-tables-before.$$
+tables_after=/tmp/db-update-$db-tables-after.$$
+last_error=/tmp/db-update-$db-error.$$
 function cleanup {
     rm -f $installed $staged $tables_before $tables_after $last_error
 }
@@ -21,14 +18,16 @@ trap 'echo; cleanup; exit 1' INT TERM
 touch $installed
 touch $staged
 
-if mysql $db -p"$PASSWORD" -e'show tables' | egrep -x "patches" >/dev/null; then
-    if ! mysql $db -p"$PASSWORD" -e"select patch from patches order by order_applied" | tail -n +2  >$installed; then
+if mysql $db -p"$PASSWORD" -e'show tables' -N | egrep -x "patches" >/dev/null; then
+    if ! mysql $db -p"$PASSWORD" -e"select patch from patches order by order_applied" -N >$installed; then
         exit 2
     fi;
+else
+    NEW=0
 fi
 IFS='
 '
-for patch in `cat $patchlist`
+for patch in $(cat $patchlist)
 do
     patch=${patch%%#*}
     if [ -z "$patch" ]; then
@@ -37,25 +36,30 @@ do
     IFS='   '
     set $patch >/dev/null
     if [ ! -e $root/$1 ]; then
-        echo "Patch does not exist in $root: $1" 1>&2
-        exit 3
+        echo "db: $1 does not exist in $root" 1>&2
+        exit 1
     fi 
     if ! egrep $1 <$installed >/dev/null; then
         echo $patch
     fi
 done >$staged
-
 if [ ! -s "$staged" ]; then
+    echo "db: $db up-to-date" 1>&2
     exit 0;
 fi
+if [ ! $FORCE ]; then
+    echo "Available updates for $db:"
+    cat -n $staged | awk '{ print $1 ". " $2 }'
+    read -p"Install updates to $db? (y/n): " r
+    case $r in
+        y*) ;;
+        *) exit 1
+    esac
+fi
 
-echo "Available updates for $db:"
-cat -n $staged | awk '{ print $1 ". " $2 }'
-read -p"Install updates to $db? (y/n): " r
-case $r in
-    y*) ;;
-    *) exit 1
-esac
+if [ $NEW ]; then
+    mysql $db -p"$PASSWORD" <$CONFIG_ROOT/$db-init.sql
+fi
 
 function log_table {
     mysql $db -p"$PASSWORD" -e"insert into patch_changelog (patch, table_name, type) values ('$2', '$3', '$1')" 2>$last_error
