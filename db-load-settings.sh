@@ -2,8 +2,6 @@
 # Loads settings for the specified db
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
-DUMP_TABLES=0
-
 CONFIG_ROOT='./.db'
 
 function error {
