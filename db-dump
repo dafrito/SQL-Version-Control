@@ -1,0 +1,16 @@
+#!/bin/sh
+# Updates a database by running patches
+PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
+
+. db-load-settings.sh;
+. db-get-password.sh;
+
+mysql $db -N -p"$PASSWORD" <<SQL | . db-filter-tables.sh | xargs mysqldump $db -p"$PASSWORD" --skip-dump-date --no-data 
+    select table_name from patch_history inner join 
+        (select 
+            table_name, max(order_applied) as order_applied 
+            from patch_history 
+            group by table_name) as i 
+        using (table_name, order_applied)
+    where type != 'drop';
+SQL

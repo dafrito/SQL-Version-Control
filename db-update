@@ -160,13 +160,5 @@ do
 done;
 
 if [ $DUMP_TABLES ]; then
-mysql $db -N -p"$PASSWORD" <<SQL | . db-filter-tables.sh | xargs mysqldump $db -p"$PASSWORD" --skip-dump-date --no-data >$db.sql
-    select table_name from patch_history inner join 
-        (select 
-            table_name, max(order_applied) as order_applied 
-            from patch_history 
-            group by table_name) as i 
-        using (table_name, order_applied)
-    where type != 'drop';
-SQL
+    db-dump $db.sql
 fi
