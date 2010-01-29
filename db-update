@@ -58,6 +58,9 @@ if [ ! $FORCE ]; then
 fi
 
 if [ $NEW ]; then
+    if [ -s ${0%/*}/init.sql ]; then
+        mysql $db -p"$PASSWORD" <${0%/*}/init.sql
+    fi
     if [ -s $CONFIG_ROOT/init.sql ]; then
         mysql $db -p"$PASSWORD" <$CONFIG_ROOT/init.sql
     fi

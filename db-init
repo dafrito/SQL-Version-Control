@@ -23,15 +23,12 @@ fi
 touch $CONFIG_ROOT/default
 
 SETTINGS="$CONFIG_ROOT/$db/settings"
-if [ ! -e "$SETTINGS" ]; then
-    if ! touch $SETTINGS; then
-        echo "db-init: $SETTINGS is not accessible"
-        exit 1;
-    fi
+if [ ! -s "$SETTINGS" ]; then
     if [ -n "$root" ]; then
         echo "root=$root" >>$SETTINGS
     fi
 fi;
+touch $CONFIG_ROOT/settings
 
 if [ -n "$PASSWORD" ]; then
     echo $PASSWORD >$CONFIG_ROOT/$db/password
@@ -52,16 +49,8 @@ if ! touch $patchlist; then
     exit 1;
 fi
 
-if [ ! -s $CONFIG_ROOT/$db/init.sql ]; then
-    if ! cp ${0%/*}/db-init.sql $CONFIG_ROOT/$db/init.sql; then
-        exit 1;
-    fi;
-fi;
+touch $CONFIG_ROOT/init.sql
 touch $CONFIG_ROOT/$db/init.sql
 
-if [ ! -s $CONFIG_ROOT/ignore ]; then
-    if ! cp ${0%/*}/db-ignore $CONFIG_ROOT/ignore; then
-        exit 1;
-    fi;
-fi
+touch $CONFIG_ROOT/ignore
 touch $CONFIG_ROOT/$db/ignore
