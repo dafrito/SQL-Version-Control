@@ -21,7 +21,7 @@ if [ ! -e $CONFIG_ROOT/default ]; then
     echo $db >$CONFIG_ROOT/default
 fi
 
-SETTINGS=".db/$db.settings"
+SETTINGS="$CONFIG_ROOT/$db.settings"
 if [ ! -e "$SETTINGS" ]; then
     if ! touch $SETTINGS; then
         echo "db-init: $SETTINGS is not accessible"
