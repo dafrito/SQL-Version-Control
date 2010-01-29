@@ -69,14 +69,16 @@ function log_table {
 
 IFS='
 '
+i=1
 for patch in `cat $staged`
 do
     IFS='   '
     set $patch
     patch_name=$1
-    echo $patch_name
+    echo "$i. $patch_name"
+    let i++
     shift
-    if ! mysql $db -p"$PASSWORD" -e"show tables" -N | egrep -xv "Tables_in_$db" | sort >$tables_before; then
+    if ! mysql $db -p"$PASSWORD" -e"show tables" -N | . db-filter-tables.sh | sort >$tables_before; then
         exit 2
     fi;
     pushd $root >/dev/null
@@ -91,7 +93,7 @@ do
             fi ;;
     esac
     popd >/dev/null
-    if ! mysql $db -p"$PASSWORD" -e"show tables" -N | egrep -xv "Tables_in_$db" | sort >$tables_after; then
+    if ! mysql $db -p"$PASSWORD" -e"show tables" -N | . db-filter-tables.sh | sort >$tables_after; then
         exit 2
     fi;
     IFS='
@@ -154,7 +156,7 @@ do
 done;
 
 if [ $DUMP_TABLES ]; then
-mysql $db -N -p"$PASSWORD" <<SQL | egrep -xv "Tables_in_$db" | xargs mysqldump $db -p"$PASSWORD" --skip-dump-date --no-data >db-$db.sql
+mysql $db -N -p"$PASSWORD" <<SQL | . db-filter-tables.sh | xargs mysqldump $db -p"$PASSWORD" --skip-dump-date --no-data >db-$db.sql
     select table_name from patch_history inner join 
         (select 
             table_name, max(order_applied) as order_applied 
