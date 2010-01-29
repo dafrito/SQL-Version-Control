@@ -34,7 +34,7 @@ fi
 if [ -z $db ]; then
     IFS='
 '
-    set -- $(ls -1 *.list) >/dev/null
+    set -- $(find -name '*.list') >/dev/null
     case "$#" in
         1) db=${1%.*} ;;
         0) error "db: no database or patchlist found" ;;
