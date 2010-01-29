@@ -12,7 +12,7 @@ fi
 
 if [ -z "$PASSWORD" ]; then
     trap 'stty echo; echo; exit 1' INT TERM
-    read -s -p'MySQL Password: ' PASSWORD
+    read -s -p"Password for '$db': " PASSWORD
     echo
 fi
 
