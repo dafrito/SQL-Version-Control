@@ -31,7 +31,7 @@ touch $CONFIG_ROOT/default
 
 SETTINGS="$CONFIG_ROOT/$db/settings"
 if [ ! -s "$SETTINGS" ]; then
-    if [ -n "$root" ]; then
+    if [ -n "$root" ] && [ "$root" != '.' ]; then
         echo "root=$root" >>$SETTINGS
     fi
 fi;
