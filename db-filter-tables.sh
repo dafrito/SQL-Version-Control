@@ -10,5 +10,5 @@ fi |
 egrep -xv "Tables_in_$db" |
 egrep -xv "patches" |
 egrep -xv "patch_changelog" |
-egrep -xv "patch_history"
+egrep -xv "patch_history" |
 egrep '[^[:space:]]'
