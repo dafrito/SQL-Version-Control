@@ -24,15 +24,16 @@ if [ -z $db ]; then
         db=$(cat $CONFIG_ROOT/default);
     fi
 fi
-if [ -n $db ]; then
-    SETTINGS=$CONFIG_ROOT/$db.settings;
-    if [ -e $SETTINGS ]; then
-        if ! . $SETTINGS; then
-            ERROR=0;
-        fi
+if [ -e $CONFIG_ROOT/settings ]; then
+    SETTINGS=$CONFIG_ROOT/settings;
+    if ! . $SETTINGS; then
+        ERROR=$SETTINGS;
     fi
-    if [ -e $CONFIG_ROOT/$db.password ]; then
-        PASSWORD=$(cat $CONFIG_ROOT/$db.password);
+fi
+if [ -e $CONFIG_ROOT/$db.settings ]; then
+    SETTINGS=$CONFIG_ROOT/$db.settings;
+    if ! . $SETTINGS; then
+        ERROR=$SETTINGS;
     fi
 fi
 
@@ -56,7 +57,7 @@ patchlist=$db.list;
 
 if [ ! $DB_DONT_COMPLAIN ]; then
     if [ $ERROR ]; then
-        echo "db: settings encountered an error: $SETTINGS"
+        echo "db: error while loading '$ERROR'"
     fi
     if [ -z $db ]; then
         echo "db: no database specified and there is no default" 1>&2;

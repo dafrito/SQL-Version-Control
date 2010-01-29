@@ -4,7 +4,7 @@ PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
 DB_DONT_COMPLAIN=0 . db-load-settings.sh #2>/dev/null
 
-CONFIG_ROOT="./.db"
+CONFIG_ROOT='./.db'
 
 if [ -z "$db" ]; then
     echo "db: Usage db-init [options] <database-name>" 1>&2
@@ -33,8 +33,10 @@ if [ ! -e "$SETTINGS" ]; then
 fi;
 
 if [ -n "$PASSWORD" ]; then
-    echo $PASSWORD >$db.password
+    echo $PASSWORD >$CONFIG_ROOT/$db.password
 fi
+touch $CONFIG_ROOT/$db.password
+touch $CONFIG_ROOT/password
 
 if [ ! -e "$root" ]; then
     if ! mkdir $root; then
@@ -43,16 +45,17 @@ if [ ! -e "$root" ]; then
 fi
 
 if [ ! -e $patchlist ]; then
-    echo "# List your patches for $db here." >$patchlist
+    echo "# List your patches for $db here, relative to '$root'" >$patchlist
 fi
 if ! touch $patchlist; then
     exit 1;
 fi
 
-if ! cp ${0%/*}/db-init.sql .db/$db-init.sql; then
+if ! cp ${0%/*}/db-init.sql $CONFIG_ROOT/$db-init.sql; then
     exit 1;
 fi;
 
-if ! cp ${0%/*}/db-ignore .db/$db-ignore; then
+if ! cp ${0%/*}/db-ignore $CONFIG_ROOT/ignore; then
     exit 1;
 fi;
+touch $CONFIG_ROOT/$db-ignore
