@@ -42,6 +42,9 @@ if [ ! -e "$root" ]; then
     fi
 fi
 
+if [ ! -e $patchlist ]; then
+    echo "# List your patches for $db here." >$patchlist
+fi
 if ! touch $patchlist; then
     exit 1;
 fi
