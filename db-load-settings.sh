@@ -24,6 +24,7 @@ while [ -n "$1" ]; do
         -*) ;;
         *) 
             db=$1
+            DB_CONFIG_ROOT=$CONFIG_ROOT/$db
     esac
     shift
 done
