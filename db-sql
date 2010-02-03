@@ -1,0 +1,7 @@
+#!/bin/bash
+PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
+
+. db-load-settings.sh;
+. db-get-password.sh;
+
+mysql $db -p"$PASSWORD"
