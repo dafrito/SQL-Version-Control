@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Retrieves a password and verifies a log-in to the specified db.
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 

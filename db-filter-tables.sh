@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Updates a database by running patches
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 

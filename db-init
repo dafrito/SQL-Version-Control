@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Initializes a directory to be used as a db-utils repository
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 

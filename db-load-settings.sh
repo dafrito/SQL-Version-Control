@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Loads settings for the specified db
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
