@@ -2,7 +2,7 @@
 # Initializes a directory to be used as a db-utils repository
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
-DB_DONT_COMPLAIN=0 . db-load-settings.sh #2>/dev/null
+DB_DONT_COMPLAIN=0 DB_EXPLICIT_ONLY=0 . db-load-settings.sh #2>/dev/null
 
 CONFIG_ROOT='./.db'
 

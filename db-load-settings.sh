@@ -28,14 +28,14 @@ while [ -n "$1" ]; do
     shift
 done
 
-if [ -z $db ]; then
+if [ -z "$DB_EXPLICIT_ONLY" ] && [ -z $db ]; then
     if [ -s $CONFIG_ROOT/default ]; then
         db=$(cat $CONFIG_ROOT/default);
         DB_CONFIG_ROOT=$CONFIG_ROOT/$db
     fi
 fi
 
-if [ -z $db ]; then
+if [ -z "$DB_EXPLICIT_ONLY" ] && [ -z $db ]; then
     IFS='
 '
     set -- $(find -name '*.list') >/dev/null
@@ -51,13 +51,13 @@ fi
 
 if [ -s $CONFIG_ROOT/settings ]; then
     SETTINGS=$CONFIG_ROOT/settings;
-    if ! . $SETTINGS; then
+    if [ -z "$DB_EXPLICIT_ONLY" ] && ! . $SETTINGS; then
         ERROR=$SETTINGS;
     fi
 fi
 if [ -s $DB_CONFIG_ROOT/settings ]; then
     SETTINGS=$DB_CONFIG_ROOT/settings;
-    if ! . $SETTINGS; then
+    if [ -z "$DB_EXPLICIT_ONLY" ] && ! . $SETTINGS; then
         ERROR=$SETTINGS;
     fi
 fi
