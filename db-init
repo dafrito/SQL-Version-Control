@@ -3,6 +3,7 @@
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
 DB_DONT_COMPLAIN=0 DB_EXPLICIT_ONLY=0 . db-load-settings.sh
+db=$REAL_DATABASE
 
 CONFIG_ROOT='./.db'
 

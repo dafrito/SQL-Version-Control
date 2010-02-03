@@ -93,6 +93,7 @@ fi
 root=${root-'.'}
 patchlist=$db.list;
 
+REAL_DATABASE=$db
 if [ -s $DB_CONFIG_ROOT/database ]; then
     db=$(cat $DB_CONFIG_ROOT/database );
 fi
