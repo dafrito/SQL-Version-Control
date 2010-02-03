@@ -17,7 +17,10 @@ IFS='
 ='
 while [ -n "$1" ]; do
     case "$1" in
-        -d|-db|--database) db=$2; shift ;;
+        -d|-db|--database) 
+            db=$2; 
+            DB_CONFIG_ROOT=$CONFIG_ROOT/$db
+            shift ;;
         -*) ;;
         *) 
             db=$1
@@ -28,6 +31,7 @@ done
 if [ -z $db ]; then
     if [ -s $CONFIG_ROOT/default ]; then
         db=$(cat $CONFIG_ROOT/default);
+        DB_CONFIG_ROOT=$CONFIG_ROOT/$db
     fi
 fi
 
@@ -36,7 +40,9 @@ if [ -z $db ]; then
 '
     set -- $(find -name '*.list') >/dev/null
     case "$#" in
-        1) db=${1%.*} ;;
+        1) 
+            db=${1%.*} 
+            DB_CONFIG_ROOT=$CONFIG_ROOT/$db ;;
         0) error "db: no database or patchlist found" ;;
         *) error "db: multiple lists found: " $* ;;
     esac
@@ -49,8 +55,8 @@ if [ -s $CONFIG_ROOT/settings ]; then
         ERROR=$SETTINGS;
     fi
 fi
-if [ -s $CONFIG_ROOT/$db/settings ]; then
-    SETTINGS=$CONFIG_ROOT/$db/settings;
+if [ -s $DB_CONFIG_ROOT/settings ]; then
+    SETTINGS=$DB_CONFIG_ROOT/settings;
     if ! . $SETTINGS; then
         ERROR=$SETTINGS;
     fi

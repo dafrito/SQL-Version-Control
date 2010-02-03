@@ -75,8 +75,8 @@ if [ $NEW ]; then
     if [ -s $CONFIG_ROOT/init.sql ]; then
         mysql $db -p"$PASSWORD" <$CONFIG_ROOT/init.sql
     fi
-    if [ -s $CONFIG_ROOT/$db/init.sql ]; then
-        mysql $db -p"$PASSWORD" <$CONFIG_ROOT/$db/init.sql
+    if [ -s $DB_CONFIG_ROOT/init.sql ]; then
+        mysql $db -p"$PASSWORD" <$DB_CONFIG_ROOT/init.sql
     fi
 fi
 

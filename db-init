@@ -11,8 +11,10 @@ if [ -z "$db" ]; then
     exit 1
 fi
 
-if [ ! -e $CONFIG_ROOT/$db ]; then
-    if ! mkdir -p $CONFIG_ROOT/$db; then
+DB_CONFIG_ROOT=$CONFIG_ROOT/$db
+
+if [ ! -e $DB_CONFIG_ROOT ]; then
+    if ! mkdir -p $DB_CONFIG_ROOT; then
         exit 1
     fi
 fi
@@ -29,7 +31,7 @@ if [ ! -s $CONFIG_ROOT/default ]; then
 fi
 touch $CONFIG_ROOT/default
 
-SETTINGS="$CONFIG_ROOT/$db/settings"
+SETTINGS="$DB_CONFIG_ROOT/settings"
 if [ ! -s "$SETTINGS" ]; then
     if [ -n "$root" ] && [ "$root" != '.' ]; then
         echo "root=$root" >>$SETTINGS
@@ -38,9 +40,9 @@ fi;
 touch $CONFIG_ROOT/settings
 
 if [ -n "$PASSWORD" ]; then
-    echo $PASSWORD >$CONFIG_ROOT/$db/password
+    echo $PASSWORD >$DB_CONFIG_ROOT/password
 fi
-touch $CONFIG_ROOT/$db/password
+touch $DB_CONFIG_ROOT/password
 touch $CONFIG_ROOT/password
 
 if [ ! -e "$root" ]; then
@@ -57,7 +59,7 @@ if ! touch $patchlist; then
 fi
 
 touch $CONFIG_ROOT/init.sql
-touch $CONFIG_ROOT/$db/init.sql
+touch $DB_CONFIG_ROOT/init.sql
 
 touch $CONFIG_ROOT/ignore
-touch $CONFIG_ROOT/$db/ignore
+touch $DB_CONFIG_ROOT/ignore

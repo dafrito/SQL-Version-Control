@@ -3,8 +3,8 @@
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
 if [ ! $PASSWORD ]; then
-    if [ -s $CONFIG_ROOT/$db/password ]; then
-        PASSWORD=$(cat $CONFIG_ROOT/$db/password);
+    if [ -s $DB_CONFIG_ROOT/password ]; then
+        PASSWORD=$(cat $DB_CONFIG_ROOT/password);
     elif [ -s $CONFIG_ROOT/password ]; then
         PASSWORD=$(cat $CONFIG_ROOT/password);
     fi
