@@ -92,6 +92,10 @@ fi
 root=${root-'.'}
 patchlist=$db.list;
 
+if [ -s $DB_CONFIG_ROOT/database ]; then
+    db=$(cat $DB_CONFIG_ROOT/database );
+fi
+
 if [ -z $db ]; then
     error "db: no database specified and there is no default";
 fi

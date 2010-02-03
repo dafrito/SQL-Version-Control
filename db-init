@@ -23,6 +23,7 @@ if [ ! -e $CONFIG_ROOT/.gitignore ]; then
     cat >$CONFIG_ROOT/.gitignore <<X
 *password
 *log
+*database
 X
 fi
 
@@ -57,6 +58,8 @@ fi
 if ! touch $patchlist; then
     exit 1;
 fi
+
+touch $DB_CONFIG_ROOT/database
 
 touch $CONFIG_ROOT/init.sql
 touch $DB_CONFIG_ROOT/init.sql
