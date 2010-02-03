@@ -6,7 +6,7 @@ PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 . db-get-password.sh;
 
 function get_tables {
-    if ! mysql $db -p"$PASSWORD" -e"show tables" -N; then
+    if ! mysql $db -u $user -p"$PASSWORD" -e"show tables" -N; then
         exit 2
     fi
 }
@@ -34,7 +34,7 @@ trap cleanup EXIT
 trap 'echo; cleanup; exit 1' INT TERM
 
 function get_history {
-    if ! mysql $db -p"$PASSWORD" -e"select table_name,type,order_applied from patch_history" -N; then
+    if ! mysql $db -u $user -p"$PASSWORD" -e"select table_name,type,order_applied from patch_history" -N; then
         exit 2
     fi;
 }
@@ -61,7 +61,7 @@ while [ $tries -lt 20 ]; do
     log "[II] Starting erase, attempt $tries"
     for table in `cat $staged`; do
         log "[II] Attempting to drop '$table'"
-        mysql $db -p"$PASSWORD" -e"drop view if exists $table; drop table if exists $table;" 2>$last_error
+        mysql $db -u "$user" -p"$PASSWORD" -e"drop view if exists $table; drop table if exists $table;" 2>$last_error
         if [ -s $last_error ]; then
             let errors++;
             log "[WW] error during removal: $(cat $last_error)"
@@ -84,7 +84,7 @@ if [ $errors -gt 0 ]; then
     exit 2
 fi
 
-if ! mysql $db -p"$PASSWORD" -e"truncate patches; truncate patch_changelog"; then
+if ! mysql $db -u "$user" -p"$PASSWORD" -e"truncate patches; truncate patch_changelog"; then
     exit 2
 fi
 

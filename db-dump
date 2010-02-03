@@ -6,7 +6,7 @@ PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 . db-get-password.sh;
 
 function get_history {
-    if ! mysql $db -p"$PASSWORD" -e"select table_name,type,order_applied from patch_history" -N; then
+    if ! mysql $db -u "$user" -p"$PASSWORD" -e"select table_name,type,order_applied from patch_history" -N; then
         exit 2
     fi;
 }

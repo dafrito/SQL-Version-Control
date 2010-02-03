@@ -16,6 +16,6 @@ if [ -z "$PASSWORD" ]; then
     echo
 fi
 
-if ! mysql $db -p$PASSWORD -e"use $db"; then
+if ! mysql $db -u "$user" -p$PASSWORD -e"use $db"; then
     exit 2
 fi

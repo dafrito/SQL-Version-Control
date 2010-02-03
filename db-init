@@ -38,6 +38,9 @@ if [ ! -s "$SETTINGS" ]; then
     if [ -n "$root" ] && [ "$root" != '.' ]; then
         echo "root=$root" >>$SETTINGS
     fi
+    if [ -n "$user" ]; then
+        echo "user=$user" >>$SETTINGS
+    fi
 fi;
 touch $CONFIG_ROOT/settings
 

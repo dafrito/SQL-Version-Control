@@ -76,6 +76,7 @@ while [ -n "$1" ]; do
         --no-dump) unset dump;;
         -r|--root) root=$2; shift ;;
         -l|--log) log=$2; shift ;;
+        -u|--user) user=$2; shift ;;
     esac
     shift
 done
@@ -91,6 +92,7 @@ if [ -z $log ]; then
     fi
 fi
 root=${root-'.'}
+user=${user-$USER}
 patchlist=$db.list;
 
 REAL_DATABASE=$db
