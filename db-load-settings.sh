@@ -39,7 +39,7 @@ fi
 if [ -z "$DB_EXPLICIT_ONLY" ] && [ -z $db ]; then
     IFS='
 '
-    set -- $(find -name '*.list') >/dev/null
+    set -- $(find . -maxdepth 1 -name '*.list') >/dev/null
     case "$#" in
         1) 
             db=${1%.*} 
