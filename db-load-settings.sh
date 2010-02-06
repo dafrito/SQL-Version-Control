@@ -50,18 +50,20 @@ if [ -z "$DB_EXPLICIT_ONLY" ] && [ -z $db ]; then
     set -- $args >/dev/null
 fi
 
-if [ -s $CONFIG_ROOT/settings ]; then
-    SETTINGS=$CONFIG_ROOT/settings;
-    if [ -z "$DB_EXPLICIT_ONLY" ] && ! . $SETTINGS; then
-        ERROR=$SETTINGS;
+function load_settings {
+    if [ -n "$DB_EXPLICIT_ONLY" ]; then
+        return;
     fi
-fi
-if [ -s $DB_CONFIG_ROOT/settings ]; then
-    SETTINGS=$DB_CONFIG_ROOT/settings;
-    if [ -z "$DB_EXPLICIT_ONLY" ] && ! . $SETTINGS; then
-        ERROR=$SETTINGS;
+    if [ -e $1 ]; then
+        return
     fi
-fi
+    source $1;
+}
+
+load_settings $CONFIG_ROOT/settings;
+load_settings $CONFIG_ROOT/settings.local;
+load_settings $DB_CONFIG_ROOT/settings;
+load_settings $DB_CONFIG_ROOT/settings.local;
 
 IFS='   
 ='

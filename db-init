@@ -25,6 +25,7 @@ if [ ! -e $CONFIG_ROOT/.gitignore ]; then
 *password
 *log
 *database
+*.local
 X
 fi
 
@@ -33,16 +34,19 @@ if [ ! -s $CONFIG_ROOT/default ]; then
 fi
 touch $CONFIG_ROOT/default
 
-SETTINGS="$DB_CONFIG_ROOT/settings"
+settings="$DB_CONFIG_ROOT/settings"
 if [ ! -s "$SETTINGS" ]; then
     if [ -n "$root" ] && [ "$root" != '.' ]; then
-        echo "root=$root" >>$SETTINGS
+        echo "root=$root" >>$settings
     fi
     if [ -n "$user" ]; then
-        echo "user=$user" >>$SETTINGS
+        echo "user=$user" >>$settings.local
     fi
 fi;
 touch $CONFIG_ROOT/settings
+touch $CONFIG_ROOT/settings.local
+touch $DB_CONFIG_ROOT/settings
+touch $DB_CONFIG_ROOT/settings.local
 
 if [ -n "$PASSWORD" ]; then
     echo $PASSWORD >$DB_CONFIG_ROOT/password
