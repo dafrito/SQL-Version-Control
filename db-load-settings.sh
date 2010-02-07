@@ -54,7 +54,7 @@ function load_settings {
     if [ -n "$DB_EXPLICIT_ONLY" ]; then
         return;
     fi
-    if [ -e $1 ]; then
+    if [ ! -e $1 ]; then
         return
     fi
     source $1;
