@@ -25,6 +25,7 @@ if mysql $db -u "$user" -p"$PASSWORD" -e'show tables' -N | egrep -x "patches" >/
 else
     NEW=0
 fi
+
 function get_staged {
     IFS='
 '
@@ -53,6 +54,7 @@ function get_staged {
         fi
     done 
 }
+
 get_staged $patchlist >$staged
 if [ ! -s "$staged" ]; then
     echo "db: $db up-to-date" 1>&2
