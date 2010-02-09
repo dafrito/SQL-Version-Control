@@ -5,106 +5,118 @@ PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 CONFIG_ROOT='./.db'
 
 function error {
-    if [ $DB_DONT_COMPLAIN ]; then
+    if [ $TOLERANT ]; then
         return;
     fi
-    echo $* 1>&2
+    echo "db:" $* 1>&2
     exit 1
 }
 
-args=$*
-IFS='   
-='
-while [ -n "$1" ]; do
-    case "$1" in
-        -d|-db|--database) 
-            db=$2; 
-            DB_CONFIG_ROOT=$CONFIG_ROOT/$db
-            shift ;;
-        -*) ;;
-        *) 
-            db=$1
-            DB_CONFIG_ROOT=$CONFIG_ROOT/$db
-    esac
-    shift
-done
+function get_build_from_args {
+    found=1;
+    while [ -n "$1" ]; do
+        case "$1" in
+            -*) ;;
+            *) 
+                BUILD=$1
+                found=0
+        esac
+        shift
+    done
+    return $found
+}
 
-if [ -z "$DB_EXPLICIT_ONLY" ] && [ -z $db ]; then
-    if [ -s $CONFIG_ROOT/default ]; then
-        db=$(cat $CONFIG_ROOT/default);
-        DB_CONFIG_ROOT=$CONFIG_ROOT/$db
-    fi
-fi
-
-if [ -z "$DB_EXPLICIT_ONLY" ] && [ -z $db ]; then
+function get_build_by_inference {
+    old=$IFS
     IFS='
 '
     set -- $(find . -maxdepth 1 -name '*.list') >/dev/null
+    IFS=$old
     case "$#" in
         1) 
-            db=${1%.*} 
-            DB_CONFIG_ROOT=$CONFIG_ROOT/$db ;;
-        0) error "db: no database or patchlist found" ;;
-        *) error "db: multiple lists found: " $* ;;
+            BUILD=${1%.*} 
+            return 0
+            ;;
+        0) 
+            ERROR="no database or patchlist found"
+            return 1
+            ;;
+        *) 
+            ERROR=$(echo "multiple lists found: " $*)
+            return 1
+            ;;
     esac
-    set -- $args >/dev/null
+    # Should never get here.
+    echo Unreachable point reached
+    exit 3;
+}
+
+if [ ! "$BUILD" ]; then
+    get_build_by_inference $*
+    get_build_from_args $*
 fi
 
 function load_settings {
-    if [ -n "$DB_EXPLICIT_ONLY" ]; then
-        return;
+    if [ ! -s $1 ]; then
+        return 0;
     fi
-    if [ ! -e $1 ]; then
-        return
+    if ! source $1; then
+        error "$1 returned exit code: $?"
     fi
-    source $1;
 }
 
-load_settings $CONFIG_ROOT/settings;
-load_settings $CONFIG_ROOT/settings.local;
-load_settings $DB_CONFIG_ROOT/settings;
-load_settings $DB_CONFIG_ROOT/settings.local;
-
-IFS='   
-='
-set -- $args >/dev/null
-while [ -n "$1" ]; do
-    case "$1" in
-        -d|-db|--database) shift ;;
-        -p|-pw|--password) PASSWORD=$2; shift ;;
-        -f|--force) FORCE=0 ;;
-        -i|--interactive) unset FORCE ;;
-        --dump) dump=0 ;;
-        --no-dump) unset dump;;
-        -r|--root) root=$2; shift ;;
-        -l|--log) log=$2; shift ;;
-        -u|--user) user=$2; shift ;;
-    esac
-    shift
-done
-set -- $args >/dev/null
-
-if [ -z $log ]; then
-    if [ -e $CONFIG_ROOT ]; then
-        if [ -e $CONFIG_ROOT/$db ]; then
-            log=$CONFIG_ROOT/$db/log
-        else
-            log=$CONFIG_ROOT/log
-        fi
-    fi
+if [ ! "$DONT_LOAD_SETTINGS" ]; then
+    load_settings $CONFIG_ROOT/settings
+    load_settings $CONFIG_ROOT/settings.local
 fi
+
+if [ ! "$BUILD" ]; then
+    error "No suitable build was found or provided"
+fi
+
+BUILD_CONFIG_ROOT="$CONFIG_ROOT/$BUILD"
+
+if [ ! "$DONT_LOAD_SETTINGS" ]; then
+    load_settings $BUILD_CONFIG_ROOT/settings;
+    load_settings $BUILD_CONFIG_ROOT/settings.local;
+fi
+
+function load_arguments {
+    # Tab, space, newline, and equals
+    old=$IFS
+    IFS='   
+    ='
+    set -- $* >/dev/null
+    IFS=$old
+    while [ -n "$1" ]; do
+        case "$1" in
+            -db|--database) db=$2; shift ;; 
+            -p|-pw|--password) PASSWORD=$2; shift ;;
+            -f|--force) FORCE=0 ;;
+            -i|--interactive) unset FORCE ;;
+            --dump) dump=0 ;;
+            --no-dump) unset dump;;
+            -r|--root) root=$2; shift ;;
+            -l|--log) log=$2; shift ;;
+            -u|--user) user=$2; shift ;;
+        esac
+        shift
+    done
+}
+load_arguments
+
+if [ ! "$log" ]; then
+    if [ -e "$BUILD_CONFIG_ROOT" ]; then
+        log="$BUILD_CONFIG_ROOT/log"
+    elif [ -e "$CONFIG_ROOT" ]; then
+        log="$CONFIG_ROOT/log"
+    fi;
+fi
+
 root=${root-'.'}
 user=${user-$USER}
-patchlist=$db.list;
-
-REAL_DATABASE=$db
-if [ -s $DB_CONFIG_ROOT/database ]; then
-    db=$(cat $DB_CONFIG_ROOT/database );
-fi
-
-if [ -z $db ]; then
-    error "db: no database specified and there is no default";
-fi
+db=${db-$BUILD}
+patchlist=${patchlist-$BUILD.list}
 if [ ! -e $patchlist ]; then
-    error "db: $patchlist not found"
+    error "$patchlist not found"
 fi

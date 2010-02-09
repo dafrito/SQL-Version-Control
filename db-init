@@ -2,75 +2,43 @@
 # Initializes a directory to be used as a db-utils repository
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
-DB_DONT_COMPLAIN=0 DB_EXPLICIT_ONLY=0 . db-load-settings.sh
-db=$REAL_DATABASE
-
-CONFIG_ROOT='./.db'
-
-if [ -z "$db" ]; then
-    echo "db: Usage db-init [options] <database-name>" 1>&2
-    exit 1
+TOLERANT=0 DONT_LOAD_SETTINGS=0 . db-load-settings.sh
+if [ ! "$BUILD" ]; then
+    error "usage: db-init [options] <build-name>"
 fi
 
-DB_CONFIG_ROOT=$CONFIG_ROOT/$db
-
-if [ ! -e $DB_CONFIG_ROOT ]; then
-    if ! mkdir -p $DB_CONFIG_ROOT; then
-        exit 1
-    fi
-fi
+mkdir -p $CONFIG_ROOT
+mkdir -p $BUILD_CONFIG_ROOT
 
 if [ ! -e $CONFIG_ROOT/.gitignore ]; then
-    cat >$CONFIG_ROOT/.gitignore <<X
-*password
+    cat >$CONFIG_ROOT/.gitignore <<EOF
 *log
-*database
 *.local
-X
+EOF
 fi
 
-if [ ! -s $CONFIG_ROOT/default ]; then
-    echo $db >$CONFIG_ROOT/default
+settings="$BUILD_CONFIG_ROOT/settings"
+if [ ! -e "$settings" ] && [ -n "$root" ] && [ "$root" != '.' ]; then
+    echo "root=$root" >>$settings
 fi
-touch $CONFIG_ROOT/default
-
-settings="$DB_CONFIG_ROOT/settings"
-if [ ! -s "$SETTINGS" ]; then
-    if [ -n "$root" ] && [ "$root" != '.' ]; then
-        echo "root=$root" >>$settings
-    fi
-    if [ -n "$user" ]; then
-        echo "user=$user" >>$settings.local
-    fi
+settings=$settings.local
+if [ ! -e "$settings" ] && [ -n "$user" ] && [ "$user" != "$USER" ]; then
+    echo "user=$user" >>$settings
 fi;
 touch $CONFIG_ROOT/settings
 touch $CONFIG_ROOT/settings.local
-touch $DB_CONFIG_ROOT/settings
-touch $DB_CONFIG_ROOT/settings.local
+touch $BUILD_CONFIG_ROOT/settings
+touch $BUILD_CONFIG_ROOT/settings.local
 
-if [ -n "$PASSWORD" ]; then
-    echo $PASSWORD >$DB_CONFIG_ROOT/password
-fi
-touch $DB_CONFIG_ROOT/password
-touch $CONFIG_ROOT/password
-
-if [ ! -e "$root" ]; then
-    if ! mkdir $root; then
-        exit 1;
-    fi
-fi
+mkdir -p $root
 
 if [ ! -e $patchlist ]; then
-    echo "# List your patches for $db here, relative to '$root'" >$patchlist
+    echo "# List your patches for $BUILD here, relative to '$root'" >$patchlist
 fi
-if ! touch $patchlist; then
-    exit 1;
-fi
-
-touch $DB_CONFIG_ROOT/database
+touch $patchlist
 
 touch $CONFIG_ROOT/init.sql
-touch $DB_CONFIG_ROOT/init.sql
+touch $BUILD_CONFIG_ROOT/init.sql
 
 touch $CONFIG_ROOT/ignore
-touch $DB_CONFIG_ROOT/ignore
+touch $BUILD_CONFIG_ROOT/ignore

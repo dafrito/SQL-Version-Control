@@ -6,8 +6,8 @@ if [ -s $CONFIG_ROOT/ignore ]; then
     grep -v -f $CONFIG_ROOT/ignore
 else 
     cat; 
-fi | if [ -s $DB_CONFIG_ROOT/ignore ]; then
-    grep -v -f $DB_CONFIG_ROOT/ignore
+fi | if [ -s $BUILD_CONFIG_ROOT/ignore ]; then
+    grep -v -f $BUILD_CONFIG_ROOT/ignore
 else
     cat;
 fi |
