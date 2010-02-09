@@ -66,8 +66,12 @@ function load_settings {
 }
 
 if [ ! "$DONT_LOAD_SETTINGS" ]; then
+    saved_build=$BUILD
     load_settings $CONFIG_ROOT/settings
     load_settings $CONFIG_ROOT/settings.local
+    if [ $saved_build ]; then
+        BUILD=$saved_build
+    fi
 fi
 
 if [ ! "$BUILD" ]; then
