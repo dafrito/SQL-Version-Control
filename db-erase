@@ -2,8 +2,8 @@
 # Deletes all installed tables from the specified database.
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
-. db-load-settings.sh
-. db-get-password.sh;
+source db-load-settings.sh
+source db-get-password.sh;
 
 function get_tables {
     if ! mysql $db -u $user -p"$PASSWORD" -e"show tables" -N; then
@@ -39,7 +39,7 @@ function get_history {
     fi;
 }
 
-get_history | db-get-installed-tables.awk | . db-filter-tables.sh >$staged
+get_history | db-get-installed-tables.awk | source db-filter-tables.sh >$staged
 if [ ! -s $staged ]; then
     echo "db: nothing to erase in $db" 1>&2
     exit 0;
@@ -88,7 +88,7 @@ if ! mysql $db -u "$user" -p"$PASSWORD" -e"truncate patches; truncate patch_chan
     exit 2
 fi
 
-if [ $(get_tables | . db-filter-tables.sh | wc -l) -gt 0 ]; then 
+if [ $(get_tables | source db-filter-tables.sh | wc -l) -gt 0 ]; then 
     echo 'The following untracked tables were not removed:'
-    get_tables | . db-filter-tables.sh;
+    get_tables | source db-filter-tables.sh;
 fi;

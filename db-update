@@ -2,8 +2,8 @@
 # Updates a database by running patches
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
-. db-load-settings.sh;
-. db-get-password.sh;
+source db-load-settings.sh;
+source db-get-password.sh;
 
 installed=/tmp/db-update-$db-installed.$$
 staged=/tmp/db-update-$db-staged.$$
@@ -103,7 +103,7 @@ do
     echo "$i. $patch_name"
     let i++
     shift
-    if ! mysql $db -u "$user" -p"$PASSWORD" -e"show tables" -N | . db-filter-tables.sh | sort >$tables_before; then
+    if ! mysql $db -u "$user" -p"$PASSWORD" -e"show tables" -N | source db-filter-tables.sh | sort >$tables_before; then
         exit 2
     fi;
     pushd $root >/dev/null
@@ -113,7 +113,7 @@ do
                 exit 2
             fi ;;
         *)
-            if ! . $patch_name; then
+            if ! source $patch_name; then
                 exit 2
             fi ;;
     esac
@@ -121,7 +121,7 @@ do
         exit 2
     fi;
     popd >/dev/null
-    if ! mysql $db -u "$user" -p"$PASSWORD" -e"show tables" -N | . db-filter-tables.sh | sort >$tables_after; then
+    if ! mysql $db -u "$user" -p"$PASSWORD" -e"show tables" -N | source db-filter-tables.sh | sort >$tables_after; then
         exit 2
     fi;
     IFS='
