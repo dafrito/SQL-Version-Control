@@ -116,6 +116,7 @@ if [ ! "$log" ]; then
         log="$CONFIG_ROOT/log"
     fi;
 fi
+log=$(readlink -f $log)
 
 root=${root-'.'}
 user=${user-$USER}
