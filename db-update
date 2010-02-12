@@ -26,6 +26,19 @@ else
     NEW=0
 fi
 
+function patch_allowed {
+    if [[ ! $1 =~ ^@ ]]; then
+        return 0;
+    fi
+    while [[ $1 =~ ^@ ]]; do
+        if [[ "@$BUILD" == $1 ]]; then
+            return 0
+        fi
+        shift
+    done
+    return 1
+}
+
 function get_staged {
     IFS='
 '
@@ -37,7 +50,13 @@ function get_staged {
         fi
         IFS='   '
         set -- $patch >/dev/null
-        if echo $1 | grep -e'\.list$' >/dev/null; then
+        if ! patch_allowed $*; then
+            continue
+        fi
+        while [[ $1 =~ ^@ ]]; do
+            shift
+        done
+        if [[ $1 =~ \\.list ]]; then
             if [ -e $root/$1 ]; then
                 get_staged $root/$1
             elif [ -e $1 ]; then
@@ -50,7 +69,7 @@ function get_staged {
             echo "db: $1 does not exist in $root" 1>&2
             exit 1
         elif ! egrep $1 <$installed >/dev/null; then
-            echo $patch
+            echo $*
         fi
     done 
 }
