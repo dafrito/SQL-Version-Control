@@ -109,11 +109,11 @@ do
     pushd $root >/dev/null
     case $patch_name in
         *.sql)
-            if ! mysql $db -u "$user" -p"$PASSWORD" <$patch_name; then
+            if ! mysql $db -u "$user" -p"$PASSWORD" <$patch_name >>$log; then
                 exit 2
             fi ;;
         *)
-            if ! source $patch_name; then
+            if ! source $patch_name >>$log; then
                 exit 2
             fi ;;
     esac
