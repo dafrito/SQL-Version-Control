@@ -8,8 +8,9 @@ function sql {
 function log_with_status {
     log_status=$1
     shift
-    [ -r $log ] || return
+    [ -r $log ] || return 1
     echo "db: $BUILD: [$log_status] " $* >>$log
+    return $?
 }
 
 function log {
