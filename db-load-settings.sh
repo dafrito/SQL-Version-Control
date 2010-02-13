@@ -2,15 +2,9 @@
 # Loads settings for the specified db
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
-CONFIG_ROOT='./.db'
+source db-library.sh;
 
-function error {
-    if [ $TOLERANT ]; then
-        return;
-    fi
-    echo "db:" $* 1>&2
-    exit 1
-}
+CONFIG_ROOT='./.db'
 
 function get_build_from_args {
     found=1;

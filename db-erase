@@ -2,21 +2,9 @@
 # Deletes all installed tables from the specified database.
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
+source db-library.sh;
 source db-load-settings.sh
 source db-get-password.sh;
-
-function get_tables {
-    if ! mysql $db -u $user -p"$PASSWORD" -e"show tables" -N; then
-        exit 2
-    fi
-}
-
-function log {
-    if [ -z $log ]; then
-        return
-    fi
-    echo "$db: " $* >>$log
-}
 
 if ! get_tables | egrep -x 'patches' >/dev/null; then
     echo "db: nothing to erase in $db" 1>&2
