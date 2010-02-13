@@ -2,7 +2,8 @@
 # Common library functions
 
 function sql {
-    return mysql $db -u $user -p"$PASSWORD" -e$*
+    mysql $db -u $user -p"$PASSWORD" -e"$*"
+    return $?
 }
 
 function log_with_status {
