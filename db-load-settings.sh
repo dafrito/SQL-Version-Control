@@ -4,6 +4,7 @@ PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
 source db-library.sh;
 
+DB_UTILS_ROOT=${0%/*}
 CONFIG_ROOT='./.db'
 
 function get_build_from_args {
