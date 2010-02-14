@@ -11,4 +11,5 @@ function get_history {
     fi;
 }
 
-get_history | db-get-installed-tables.awk | xargs mysqldump $db -u "$user" -p"$PASSWORD" --skip-dump-date --no-data;
+get_history | awk -f db-get-installed-tables.awk | \
+xargs mysqldump $db -u "$user" -p"$PASSWORD" --skip-dump-date --no-data;

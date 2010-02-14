@@ -27,7 +27,7 @@ function get_history {
     fi;
 }
 
-get_history | db-get-installed-tables.awk | source db-filter-tables.sh >$staged
+get_history | awk -f db-get-installed-tables.awk | source db-filter-tables.sh >$staged
 if [ ! -s $staged ]; then
     echo "db: nothing to erase in $db" 1>&2
     exit 0;
