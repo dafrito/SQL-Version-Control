@@ -21,12 +21,6 @@ function cleanup {
 trap cleanup EXIT
 trap 'echo; cleanup; exit 1' INT TERM
 
-function get_history {
-    if ! mysql $db -u $user -p"$PASSWORD" -e"select table_name,type,order_applied from patch_history" -N; then
-        exit 2
-    fi;
-}
-
 get_history | awk -f db-get-installed-tables.awk | source db-filter-tables.sh >$staged
 if [ ! -s $staged ]; then
     echo "db: nothing to erase in $db" 1>&2
@@ -46,35 +40,27 @@ fi
 tries=0
 errors=0
 while [ $tries -lt 20 ]; do
-    log "[II] Starting erase, attempt $tries"
+    log "Starting erase, attempt $tries"
     for table in `cat $staged`; do
-        log "[II] Attempting to drop '$table'"
-        mysql $db -u "$user" -p"$PASSWORD" -e"drop view if exists $table; drop table if exists $table;" 2>$last_error
+        log "Attempting to drop '$table'"
+        sql_raw "drop view if exists $table; drop table if exists $table;" 2>$last_error
         if [ -s $last_error ]; then
             let errors++;
-            log "[WW] error during removal: $(cat $last_error)"
+            warn "error during removal: $(cat $last_error)"
         fi
     done
     if [ $errors = 0 ]; then
         break
     else
-        log "[WW] removal failed with $errors error(s)"
+        warn "removal failed with $errors error(s)"
         errors=0
     fi
     let tries++
 done
-if [ $errors -gt 0 ]; then
-    log "[EE] remove failed after 20 tries"
-    echo "db: could not remove all tables" 1>&2
-    if [ -n $log ]; then
-        echo "See $log for more information" 1>&2
-    fi
-    exit 2
-fi
 
-if ! mysql $db -u "$user" -p"$PASSWORD" -e"truncate patches; truncate patch_changelog"; then
-    exit 2
-fi
+[ $errors -lt 1 ] || error "remove failed after 20 tries"
+
+sql "truncate patches; truncate patch_changelog"
 
 if [ $(get_tables | source db-filter-tables.sh | wc -l) -gt 0 ]; then 
     echo 'The following untracked tables were not removed:'

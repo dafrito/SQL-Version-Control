@@ -3,8 +3,14 @@
 
 function sql {
     mysql $db -u $user -p"$PASSWORD" -e"$*"
+    [ ! $? ] && [ ! "$TOLERANT" ] && exit 2
+}
+
+function sql_raw {
+    mysql $db -u $user -p"$PASSWORD" -e"$*"
     return $?
 }
+
 
 function log_with_status {
     log_status=$1
@@ -25,13 +31,16 @@ function warn {
 
 function error {
     log_with_status "EE" $*
+    echo $* 1>&2
     [ $TOLERANT ] || exit 1
 }
 
 function get_tables {
-    if ! mysql $db -u $user -p"$PASSWORD" -e"show tables" -N; then
-        exit 2
-    fi
+    sql "show tables"
+}
+
+function get_history {
+    sql "select table_name,type,order_applied from patch_history"
 }
 
 function perform_hook {

@@ -2,6 +2,7 @@
 # Updates a database by running patches
 PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 
+source db-library.sh
 source db-load-settings.sh;
 source db-get-password.sh;
 
@@ -18,10 +19,8 @@ trap 'echo; cleanup; exit 1' INT TERM
 touch $installed
 touch $staged
 
-if mysql $db -u "$user" -p"$PASSWORD" -e'show tables' -N | egrep -x "patches" >/dev/null; then
-    if ! mysql $db -u "$user" -p"$PASSWORD" -e"select patch from patches order by order_applied" -N >$installed; then
-        exit 2
-    fi;
+if get_tables | egrep -x "patches" >/dev/null; then
+    sql "select patch from patches order by order_applied" >$installed
 else
     NEW=0
 fi
@@ -62,11 +61,10 @@ function get_staged {
             elif [ -e $1 ]; then
                 get_staged $1
             else
-                echo "db: $1 does not exist in '$root' or current dir" 1>&2
-                exit 1
+                error "$1 does not exist in '$root' or current dir"
             fi
         elif [ ! -e $root/$1 ]; then
-            echo "db: $1 does not exist in $root" 1>&2
+            error "$1 does not exist in $root"
             exit 1
         elif ! egrep $1 <$installed >/dev/null; then
             echo $*
@@ -91,23 +89,22 @@ fi
 
 if [ $NEW ]; then
     if [ -s ${0%/*}/init.sql ]; then
-        mysql $db -u "$user" -p"$PASSWORD" <${0%/*}/init.sql
+        sql <${0%/*}/init.sql
     fi
     if [ -s $CONFIG_ROOT/init.sql ]; then
-        mysql $db -u "$user" -p"$PASSWORD" <$CONFIG_ROOT/init.sql
+        sql <$CONFIG_ROOT/init.sql
     fi
     if [ -s $BUILD_CONFIG_ROOT/init.sql ]; then
-        mysql $db -u "$user" -p"$PASSWORD" <$BUILD_CONFIG_ROOT/init.sql
+        sql <$BUILD_CONFIG_ROOT/init.sql
     fi
 fi
 
 function log_table {
-    mysql $db -u "$user" -p"$PASSWORD" -e"insert into patch_changelog (patch, table_name, type) values ('$2', '$3', '$1')" 2>$last_error
+    sql_raw "insert into patch_changelog (patch, table_name, type) values ('$2', '$3', '$1')" 2>$last_error
     if [ -s $last_error ]; then
         error=`cat $last_error`
         echo $error | egrep "^ERROR 1062 " >/dev/null && echo $error | egrep "$2"-"$3" >/dev/null && return
-        echo $error 1>&2
-        exit 2
+        error $error
     fi
 }
 
@@ -122,27 +119,19 @@ do
     echo "$i. $patch_name"
     let i++
     shift
-    if ! mysql $db -u "$user" -p"$PASSWORD" -e"show tables" -N | source db-filter-tables.sh | sort >$tables_before; then
-        exit 2
-    fi;
+    get_tables | source db-filter-tables.sh | sort >$tables_before
     pushd $root >/dev/null
     case $patch_name in
         *.sql)
-            if ! mysql $db -u "$user" -p"$PASSWORD" <$patch_name >>$log; then
-                exit 2
-            fi ;;
+            sql <$patch_name >>$log
         *)
             if ! source $patch_name >>$log; then
                 exit 2
             fi ;;
     esac
-    if ! mysql $db -u "$user" -p"$PASSWORD" -e"insert into patches (patch, who_applied) values ('$patch_name', '$(whoami)');"; then
-        exit 2
-    fi;
+    sql "insert into patches (patch, who_applied) values ('$patch_name', '$(whoami)');"
     popd >/dev/null
-    if ! mysql $db -u "$user" -p"$PASSWORD" -e"show tables" -N | source db-filter-tables.sh | sort >$tables_after; then
-        exit 2
-    fi;
+    get_tables | source db-filter-tables.sh | sort >$tables_after
     IFS='
 '
     for line in `diff -U 0 $tables_before $tables_after`; do
@@ -154,31 +143,24 @@ do
     done;
     IFS='   '
     for table; do
-        if [ $table = "Tables_in_$db" ]; then
-            continue;
-        fi
         case $table in
             +*) 
                 table=${table:1};
                 if egrep -x "$table" <$tables_before >/dev/null; then
-                    echo "db: '$table' existed before '$patch_name' was executed" 1>&2
-                    exit 1
+                    error "'$table' existed before '$patch_name' was executed"
                 fi
                 if ! egrep -x "$table" <$tables_after >/dev/null; then
-                    echo "db: '$table' does not exist, even though '$patch_name' claimed to have created it" 1>&2
-                    exit 1
+                    error "'$table' does not exist, even though '$patch_name' claimed to have created it"
                 fi
                 log_table 'create' $patch_name ${line:1} ;log_table 'create' $patch_name ${line:1}
                 ;;
             -*) 
                 table=${table:1};
                 if ! egrep -x "$table" <$tables_before >/dev/null; then
-                    echo "db: '$table' does not exist, and could not have been removed by '$patch_name'" 1>&2
-                    exit 1
+                    error "'$table' does not exist, and could not have been removed by '$patch_name'"
                 fi
                 if egrep -x "$table" <$tables_after >/dev/null; then
-                    echo "db '$table' still exists, even though '$patch_name' claimed to have removed it" 1>&2
-                    exit 1
+                    error "'$table' still exists, even though '$patch_name' claimed to have removed it"
                 fi
                 log_table 'drop' $patch_name ${line:1} 
                 ;;
@@ -192,8 +174,7 @@ do
                 elif egrep -x "$table" <$tables_after >/dev/null; then
                     log_table 'create' $patch_name $table
                 else
-                    echo "$0: '$table' was not created or removed, but was listed for '$patch_name'" 1>&2
-                    exit 1
+                    error "'$table' was not created or removed, but was listed for '$patch_name'"
                 fi
         esac
     done
