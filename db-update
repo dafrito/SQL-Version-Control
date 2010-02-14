@@ -6,20 +6,15 @@ source db-library.sh
 source db-load-settings.sh;
 source db-get-password.sh;
 
-installed=/tmp/db-update-$db-installed.$$
-staged=/tmp/db-update-$db-staged.$$
-tables_before=/tmp/db-update-$db-tables-before.$$
-tables_after=/tmp/db-update-$db-tables-after.$$
-last_error=/tmp/db-update-$db-error.$$
-function cleanup {
-    rm -f $installed $staged $tables_before $tables_after $last_error
-}
-trap cleanup EXIT
-trap 'echo; cleanup; exit 1' INT TERM
-touch $installed
-touch $staged
+installed=$TEMP_ROOT/installed
+staged=$TEMP_ROOT/staged
+tables_before=$TEMP_ROOT/tables-before
+tables_after=$TEMP_ROOT/tables-after
+last_error=$TEMP_ROOT/error
 
-if get_tables | egrep -x "patches" >/dev/null; then
+load_tables
+touch $installed
+if egrep -qx "patches" <$TABLES; then
     sql "select patch from patches order by order_applied" >$installed
 else
     NEW=0
@@ -88,14 +83,14 @@ if [ ! $FORCE ]; then
 fi
 
 if [ $NEW ]; then
-    if [ -s ${0%/*}/init.sql ]; then
-        sql <${0%/*}/init.sql
+    if [ -s $DB_UTILS_ROOT/init.sql ]; then
+        sql_file $DB_UTILS_ROOT/init.sql
     fi
     if [ -s $CONFIG_ROOT/init.sql ]; then
-        sql <$CONFIG_ROOT/init.sql
+        sql_file $CONFIG_ROOT/init.sql
     fi
     if [ -s $BUILD_CONFIG_ROOT/init.sql ]; then
-        sql <$BUILD_CONFIG_ROOT/init.sql
+        sql_file $BUILD_CONFIG_ROOT/init.sql
     fi
 fi
 
@@ -106,6 +101,11 @@ function log_table {
         echo $error | egrep "^ERROR 1062 " >/dev/null && echo $error | egrep "$2"-"$3" >/dev/null && return
         error $error
     fi
+}
+
+function get_filtered_tables {
+    load_tables
+    source db-filter-tables.sh <$TABLES | sort >$1
 }
 
 IFS='
@@ -119,11 +119,11 @@ do
     echo "$i. $patch_name"
     let i++
     shift
-    get_tables | source db-filter-tables.sh | sort >$tables_before
+    get_filtered_tables $tables_before
     pushd $root >/dev/null
     case $patch_name in
         *.sql)
-            sql <$patch_name >>$log
+            sql_file $patch_name >>$log ;;
         *)
             if ! source $patch_name >>$log; then
                 exit 2
@@ -131,7 +131,7 @@ do
     esac
     sql "insert into patches (patch, who_applied) values ('$patch_name', '$(whoami)');"
     popd >/dev/null
-    get_tables | source db-filter-tables.sh | sort >$tables_after
+    get_filtered_tables $tables_after
     IFS='
 '
     for line in `diff -U 0 $tables_before $tables_after`; do

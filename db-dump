@@ -6,5 +6,6 @@ source db-library.sh
 source db-load-settings.sh;
 source db-get-password.sh;
 
-get_history | awk -f db-get-installed-tables.awk | \
+load_history
+awk -f $DB_UTILS_ROOT/db-get-installed-tables.awk <$PATCH_HISTORY |
 xargs mysqldump $db -u "$user" -p"$PASSWORD" --skip-dump-date --no-data;

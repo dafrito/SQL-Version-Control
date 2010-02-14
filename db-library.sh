@@ -1,21 +1,44 @@
 #!/bin/bash
 # Common library functions
 
-function sql {
-    mysql $db -u $user -p"$PASSWORD" -e"$*"
-    [ ! $? ] && [ ! "$TOLERANT" ] && exit 2
+function sql_file {
+    if ! sql_file_raw $1; then
+        [ "$TOLERANT" ] || exit 2
+    fi
 }
 
-function sql_raw {
-    mysql $db -u $user -p"$PASSWORD" -e"$*"
+function sql {
+    if ! sql_raw $*; then
+        if [ ! "$TOLERANT" ]; then
+            exit 2
+        fi
+    fi
+}
+
+function sql_file_raw {
+    mysql $db -u $user -p"$PASSWORD" -N -r <$1
     return $?
 }
 
+function sql_raw {
+    mysql $db -u $user -p"$PASSWORD" -N -r -e"$*"
+    return $?
+}
+
+function load_history {
+    PATCH_HISTORY=$TEMP_ROOT/patch-history
+    sql "select table_name,type,order_applied from patch_history" >$PATCH_HISTORY
+}
+
+function load_tables {
+    TABLES=$TEMP_ROOT/tables
+    sql "show tables" >$TABLES
+}
 
 function log_with_status {
     log_status=$1
     shift
-    [ -r $log ] || return 1
+    [ -r "$log" ] || return 1
     echo "db: $BUILD: [$log_status] " $* >>$log
     return $?
 }
@@ -26,21 +49,13 @@ function log {
 
 function warn {
     log_with_status "WW" $*
-    [ $STRICT ] && exit 1
+    [ "$STRICT" ] && exit 1
 }
 
 function error {
     log_with_status "EE" $*
     echo $* 1>&2
-    [ $TOLERANT ] || exit 1
-}
-
-function get_tables {
-    sql "show tables"
-}
-
-function get_history {
-    sql "select table_name,type,order_applied from patch_history"
+    [ "$TOLERANT" ] || exit 1
 }
 
 function perform_hook {

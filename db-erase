@@ -6,24 +6,16 @@ source db-library.sh;
 source db-load-settings.sh
 source db-get-password.sh;
 
-if ! get_tables | egrep -x 'patches' >/dev/null; then
-    echo "db: nothing to erase in $db" 1>&2
-    exit 0;
-fi
+load_tables
+egrep -xq 'patches' <$TABLES || error "Nothing to erase in $db"
 
-history=/tmp/db-erase-$db-history.$$
-staged=/tmp/db-erase-$db-staged.$$
-last_error=/tmp/db-erase-$db-error.$$
+staged=$TEMP_ROOT/staged
+last_error=$TEMP_ROOT/last_error
 
-function cleanup {
-    rm -f $staged $tables $last_error $history
-}
-trap cleanup EXIT
-trap 'echo; cleanup; exit 1' INT TERM
-
-get_history | awk -f db-get-installed-tables.awk | source db-filter-tables.sh >$staged
+load_history
+awk -f $DB_UTILS_ROOT/db-get-installed-tables.awk <$PATCH_HISTORY | source db-filter-tables.sh >$staged
 if [ ! -s $staged ]; then
-    echo "db: nothing to erase in $db" 1>&2
+    echo "Nothing to erase in $db" 1>&2
     exit 0;
 fi;
 
@@ -62,7 +54,8 @@ done
 
 sql "truncate patches; truncate patch_changelog"
 
-if [ $(get_tables | source db-filter-tables.sh | wc -l) -gt 0 ]; then 
+load_tables
+if [ $(source db-filter-tables.sh <$TABLES | wc -l) -gt 0 ]; then 
     echo 'The following untracked tables were not removed:'
-    get_tables | source db-filter-tables.sh;
+    source db-filter-tables.sh <$TABLES
 fi;
