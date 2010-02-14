@@ -29,6 +29,8 @@ if [ ! $FORCE ]; then
     esac
 fi
 
+perform_hook "erase-pre"
+
 tries=0
 errors=0
 while [ $tries -lt 20 ]; do
@@ -53,6 +55,8 @@ done
 [ $errors -lt 1 ] || error "remove failed after 20 tries"
 
 sql "truncate patches; truncate patch_changelog"
+
+perform_hook "erase-post"
 
 load_tables
 if [ $(source db-filter-tables.sh <$TABLES | wc -l) -gt 0 ]; then 

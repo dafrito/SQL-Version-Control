@@ -63,9 +63,10 @@ function perform_hook {
         perform_hook $1 $CONFIG_ROOT
         perform_hook $1 $BUILD_CONFIG_ROOT
     fi
-    [ ! -e $2/$1.sh ] && return 0
-    [ ! -r $2/$1.sh ] && error "$2/$1 hook exists, but is not readable"
-    . $2/$1.sh || error "$2/$1 hook returned exit code: $?"
+    [ ! -e $2/$1.hook ] && return 0
+    [ ! -r $2/$1.hook ] && error "$2/$1.hook exists, but is not readable"
+    true
+    . $2/$1.hook || error "$2/$1.hook returned exit code: $?"
     return 0
 }
 

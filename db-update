@@ -82,6 +82,8 @@ if [ ! $FORCE ]; then
     esac
 fi
 
+perform_hook "update-pre"
+
 if [ $NEW ]; then
     if [ -s $DB_UTILS_ROOT/init.sql ]; then
         sql_file $DB_UTILS_ROOT/init.sql
@@ -120,6 +122,7 @@ do
     let i++
     shift
     get_filtered_tables $tables_before
+    perform_hook "patch-pre"
     pushd $root >/dev/null
     case $patch_name in
         *.sql)
@@ -131,6 +134,7 @@ do
     esac
     sql "insert into patches (patch, who_applied) values ('$patch_name', '$(whoami)');"
     popd >/dev/null
+    perform_hook "patch-post"
     get_filtered_tables $tables_after
     IFS='
 '
@@ -179,6 +183,8 @@ do
         esac
     done
 done;
+
+perform_hook "update-post"
 
 if [ $dump ]; then
     source db-dump >$BUILD-dump.sql

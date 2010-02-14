@@ -7,6 +7,8 @@ if [ ! "$BUILD" ]; then
     error "usage: db-init [options] <build-name>"
 fi
 
+perform_hook "init-pre"
+
 mkdir -p $CONFIG_ROOT
 mkdir -p $BUILD_CONFIG_ROOT
 
@@ -42,3 +44,5 @@ touch $BUILD_CONFIG_ROOT/init.sql
 
 touch $CONFIG_ROOT/ignore
 touch $BUILD_CONFIG_ROOT/ignore
+
+perform_hook "init-post"
