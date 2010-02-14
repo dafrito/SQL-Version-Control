@@ -75,6 +75,17 @@ fi
 
 BUILD_CONFIG_ROOT="$CONFIG_ROOT/$BUILD"
 
+if [ ! "$TEMP_ROOT" ]; then
+    TEMP_ROOT="/tmp/db-utils/$BUILD-${0##*/}-$$"
+    mkdir -p $TEMP_ROOT
+
+    function cleanup {
+        [ -e "$TEMP_ROOT" ] && rm -rf "$TEMP_ROOT"
+    }
+    trap cleanup EXIT
+    trap 'stty echo; echo; cleanup; exit 1' INT TERM
+fi
+
 if [ ! "$DONT_LOAD_SETTINGS" ]; then
     load_settings $BUILD_CONFIG_ROOT/settings;
     load_settings $BUILD_CONFIG_ROOT/settings.local;

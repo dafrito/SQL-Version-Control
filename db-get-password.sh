@@ -5,7 +5,6 @@ PATH=/bin:/usr/bin:$HOME/bin:${0%/*}
 source db-library.sh
 
 if [ -z "$PASSWORD" ]; then
-    trap 'stty echo; echo; exit 1' INT TERM
     read -s -p"Password for '$db': " PASSWORD
     echo
 fi
