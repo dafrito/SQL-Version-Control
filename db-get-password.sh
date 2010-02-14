@@ -10,6 +10,5 @@ if [ -z "$PASSWORD" ]; then
     echo
 fi
 
-if ! sql "use $db"; then
-    exit 2
-fi
+# A no-op just to make sure we can connect
+sql "use $db"
