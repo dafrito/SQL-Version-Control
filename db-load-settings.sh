@@ -25,11 +25,11 @@ function get_build_by_inference {
     old=$IFS
     IFS='
 '
-    set -- $(find . -maxdepth 1 -name '*.list') >/dev/null
+    set -- $(find $CONFIG_ROOT/* -maxdepth 0 -type d) >/dev/null
     IFS=$old
     case "$#" in
         1) 
-            BUILD=${1%.*} 
+            BUILD=${1##*/} 
             return 0
             ;;
         0) 
