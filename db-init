@@ -35,7 +35,7 @@ touch $BUILD_CONFIG_ROOT/settings.local
 mkdir -p $root
 
 if [ ! -e $patchlist ]; then
-    echo "# List your patches for $BUILD here, relative to '$root'" >$patchlist
+    echo "# List your patches for $BUILD here, relative to your root patch directory" >$patchlist
 fi
 touch $patchlist
 
