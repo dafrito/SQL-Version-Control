@@ -69,7 +69,7 @@ if [ ! "$DONT_LOAD_SETTINGS" ]; then
     fi
 fi
 
-if [ ! "$BUILD" ]; then
+if [ ! $TOLERANT ] && [ ! "$BUILD" ]; then
     error "No suitable build was found or provided"
 fi
 
@@ -122,12 +122,14 @@ if [ ! "$log" ]; then
         log="$CONFIG_ROOT/log"
     fi;
 fi
-log=$(readlink -f $log)
+if [ $log ] || [ ! $TOLERANT ]; then
+    log=$(readlink -f $log)
+fi
 
 root=${root-'.'}
 user=${user-$USER}
 db=${db-$BUILD}
 patchlist=${patchlist-$BUILD.list}
-if [ ! -e $patchlist ]; then
+if [ ! $TOLERANT ] && [ ! -e $patchlist ]; then
     error "$patchlist not found"
 fi
