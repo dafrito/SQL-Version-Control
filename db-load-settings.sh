@@ -42,8 +42,7 @@ function get_build_by_inference {
             ;;
     esac
     # Should never get here.
-    echo Unreachable point reached
-    exit 3;
+    error "Unreachable point reached"
 }
 
 if [ ! "$BUILD" ]; then
